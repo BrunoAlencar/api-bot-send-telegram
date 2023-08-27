@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateTelegramMessageDto } from './dto/create-telegram-message.dto';
 import { PublisherService } from 'src/rabbitmq/publisher.service';
 import { ConsumerService } from 'src/rabbitmq/consumer.service';
+import { HttpService } from '@nestjs/axios';
 // import { UpdateTelegramMessageDto } from './dto/update-telegram-message.dto';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class TelegramMessagesService {
   constructor(
     private readonly publisherService: PublisherService,
     private readonly consumerService: ConsumerService,
+    private readonly httpService: HttpService,
   ) {
     this.consumerService.consume({
       queueName: this.queueName,
