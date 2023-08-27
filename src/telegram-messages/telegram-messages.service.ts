@@ -33,8 +33,7 @@ export class TelegramMessagesService {
 
   async sendMessageToTelegram(message: CreateTelegramMessageDto) {
     this.logger.log('sendMessageToTelegram', message);
-
-    const { data } = await firstValueFrom(
+    await firstValueFrom(
       this.httpService
         .post(
           `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -50,9 +49,6 @@ export class TelegramMessagesService {
           }),
         ),
     );
-    this.logger.log('DEU BOM');
-    this.logger.log(JSON.stringify(data));
-    return data;
   }
 
   async retryFailedMessages(queueName: string) {

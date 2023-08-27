@@ -9,13 +9,20 @@ export class ConsumerService {
   private readonly logger = new Logger(ConsumerService.name);
   async consume({ queueName, handleMessage }: ConsumeMessageDTO) {
     const channel = await this.rabbitmqService.createChannel();
-
+    const MAX_QUANTITY_MESSAGES = 1;
+    const DELAY_TIME_IN_MILISECONDS = 400;
+    await channel.prefetch(MAX_QUANTITY_MESSAGES);
     await channel.assertQueue(queueName);
 
     channel.consume(queueName, async (message) => {
       try {
+        this.logger.log(`Message received ${queueName}`);
+        await new Promise((resolve) =>
+          setTimeout(resolve, DELAY_TIME_IN_MILISECONDS),
+        );
         await handleMessage(JSON.parse(message.content.toString()));
         channel.ack(message);
+        this.logger.log(`Message consumed ${queueName}`);
       } catch (error) {
         this.logger.error(`ConsumerService.consume.${queueName}`, error);
         const QUEUE_DEAD_LETTER = `${queueName}_DEAD_LETTER`;
@@ -36,6 +43,8 @@ export class ConsumerService {
       try {
         // await handleMessage(JSON.parse(message.content.toString()));
         this.logger.log(`consumeDeadLetters started ${QUEUE_DEAD_LETTER}`);
+        const MAX_QUANTITY_MESSAGES = 1;
+        await channel.prefetch(MAX_QUANTITY_MESSAGES);
         await channel.assertQueue(queueName);
         await channel.sendToQueue(queueName, message.content);
         channel.ack(message);
