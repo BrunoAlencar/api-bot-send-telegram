@@ -1,19 +1,11 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { TelegramMessagesService } from './telegram-messages.service';
 import { CreateTelegramMessageDto } from './dto/create-telegram-message.dto';
-import { UpdateTelegramMessageDto } from './dto/update-telegram-message.dto';
 import { ApiQuery } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth.guard';
 
 @Controller('telegram-messages')
+@UseGuards(AuthGuard)
 export class TelegramMessagesController {
   constructor(
     private readonly telegramMessagesService: TelegramMessagesService,

@@ -4,7 +4,9 @@ export class CreateTelegramMessageDto {
   @ApiProperty()
   _id: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: '123456789',
+  })
   chatId: string;
 
   @ApiProperty()

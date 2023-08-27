@@ -4,7 +4,10 @@ import { log } from 'console';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    snapshot: true,
+    cors: true,
+  });
   log(`process.env.PORT: ${process.env.PORT}`);
 
   const config = new DocumentBuilder()
