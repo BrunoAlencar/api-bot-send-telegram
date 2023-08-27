@@ -14,5 +14,6 @@ import { HttpModule } from '@nestjs/axios';
   ],
   controllers: [TelegramMessagesController],
   providers: [TelegramMessagesService],
+  exports: [TelegramMessagesService],
 })
 export class TelegramMessagesModule {}

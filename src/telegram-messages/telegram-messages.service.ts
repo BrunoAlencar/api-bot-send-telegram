@@ -1,21 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateTelegramMessageDto } from './dto/create-telegram-message.dto';
 import { PublisherService } from 'src/rabbitmq/publisher.service';
 import { ConsumerService } from 'src/rabbitmq/consumer.service';
 import { HttpService } from '@nestjs/axios';
-// import { UpdateTelegramMessageDto } from './dto/update-telegram-message.dto';
+import { catchError, firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class TelegramMessagesService {
+  private readonly logger = new Logger(TelegramMessagesService.name);
   private readonly queueName = 'TELEGRAM_MESSAGES';
   constructor(
+    private readonly httpService: HttpService,
     private readonly publisherService: PublisherService,
     private readonly consumerService: ConsumerService,
-    private readonly httpService: HttpService,
   ) {
     this.consumerService.consume({
       queueName: this.queueName,
-      handleMessage: this.sendMessageToTelegram,
+      handleMessage: this.sendMessageToTelegram.bind(this),
     });
   }
 
@@ -30,29 +32,32 @@ export class TelegramMessagesService {
   }
 
   async sendMessageToTelegram(message: CreateTelegramMessageDto) {
-    console.log('sendMessageToTelegram', message);
-    if (message._id == '2') {
-      throw new Error('Esse aqui deu ruim');
-    }
-    console.log('DEU BOM');
-    return;
+    this.logger.log('sendMessageToTelegram', message);
+
+    const { data } = await firstValueFrom(
+      this.httpService
+        .post(
+          `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+          {
+            chat_id: message.chatId,
+            text: message.text,
+          },
+        )
+        .pipe(
+          catchError((error: AxiosError) => {
+            this.logger.error(error.response.data);
+            throw 'An error happened!';
+          }),
+        ),
+    );
+    this.logger.log('DEU BOM');
+    this.logger.log(JSON.stringify(data));
+    return data;
   }
 
   async retryFailedMessages(queueName: string) {
-    console.log('Chamou retryFailedMessages', queueName);
+    this.logger.log('Chamou retryFailedMessages', queueName);
     await this.consumerService.consumeDeadLetters(queueName);
     return { message: 'Retry started' };
   }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} telegramMessage`;
-  // }
-
-  // update(id: number, updateTelegramMessageDto: UpdateTelegramMessageDto) {
-  //   return `This action updates a #${id} telegramMessage`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} telegramMessage`;
-  // }
 }
